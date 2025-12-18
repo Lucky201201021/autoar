@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>AutoAr - Jobs Calendar</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: { "primary": "#135bec", "background-light": "#f6f6f8", "background-dark": "#101622" },
+                    fontFamily: { "display": ["Manrope", "sans-serif"] },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24 }
+        /* Стиль для выбранного дня */
+        .day--selected {
+            background-color: #eff6ff !important; /* blue-50 */
+            outline: 2px solid #135bec !important;
+            border-radius: 0.5rem;
+            z-index: 10;
+        }
+        .dark .day--selected {
+            background-color: #1e293b !important;
+            outline: 2px solid #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark group/design-root overflow-x-hidden">
+    <div class="flex flex-row min-h-screen">
+        <nav class="flex flex-col w-64 bg-white dark:bg-background-dark dark:border-r dark:border-slate-800 border-r border-slate-200">
+            <div class="flex h-full min-h-[700px] flex-col justify-between p-4">
+                <div class="flex flex-col gap-4">
+                    <div class="flex gap-3 items-center px-2">
+                        <div class="rounded-full size-10 flex items-center justify-center">
+                            <svg class="text-primary h-12 w-12" fill="none" height="48" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24" width="48" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-slate-900 dark:text-white text-base font-bold leading-normal">AutoAr</h1>
+                            <p class="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal">Automation Hub</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 pt-4">
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300" href="#">
+                            <span class="material-symbols-outlined">dashboard</span><p class="text-sm font-medium">Dashboard</p>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white" href="#">
+                            <span class="material-symbols-outlined">calendar_month</span><p class="text-sm font-medium">Jobs Calendar</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <main class="flex-1 flex flex-col">
+            <header class="flex items-center justify-between whitespace-nowrap border-b border-slate-200 dark:border-slate-800 px-10 py-3 bg-white dark:bg-background-dark sticky top-0 z-20">
+                <h2 class="text-lg font-bold">Jobs Calendar</h2>
+                <div class="flex gap-4">
+                    <button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800"><span class="material-symbols-outlined">notifications</span></button>
+                </div>
+            </header>
+
+            <div class="flex-1 p-10">
+                <div class="flex justify-between items-center mb-8">
+                    <h1 class="text-slate-900 dark:text-white text-3xl font-bold">Tasks Schedule</h1>
+                    <div class="flex items-center gap-2">
+                        <button id="prevMonthBtn" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            <span class="material-symbols-outlined text-xl">chevron_left</span>
+                        </button>
+                        <span id="monthLabel" class="mx-2 text-slate-900 dark:text-white font-semibold text-lg text-center min-w-[11rem]"></span>
+                        <button id="nextMonthBtn" class="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                            <span class="material-symbols-outlined text-xl">chevron_right</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
+
+                    <div class="lg:col-span-2">
+                        <div id="calendarHeader" class="grid grid-cols-7 text-center text-sm font-semibold text-slate-600 dark:text-slate-400 mb-2">
+                            <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+                        </div>
+                        <div id="calendarGrid" class="grid grid-cols-7 border-t border-l border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                        </div>
+                    </div>
+
+                    <div class="relative w-full">
+
+                        <div id="emptyStatePanel" class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 text-center py-20">
+                            <span class="material-symbols-outlined text-5xl text-slate-300 mb-4">calendar_today</span>
+                            <h3 class="text-lg font-bold text-slate-900 dark:text-white">Select a Day</h3>
+                            <p class="text-slate-500 text-sm mt-2">Click on any day in the grid to add new tasks or view existing ones.</p>
+                        </div>
+
+                        <div id="createTaskPanel" class="hidden bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col gap-5 shadow-sm">
+                            <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-700 pb-4">
+                                <div class="bg-primary/10 p-2 rounded-lg text-primary"><span class="material-symbols-outlined">add_task</span></div>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">New Task</h2>
+                            </div>
+                            <p id="createPanelDate" class="text-sm font-semibold text-slate-500"></p>
+
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-slate-500 uppercase">Title</label>
+                                <input id="taskTitle" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 dark:bg-slate-800" placeholder="Task Name"/>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-slate-500 uppercase">Details</label>
+                                <textarea id="taskDesc" class="form-textarea w-full rounded-lg border-slate-200 bg-slate-50 dark:bg-slate-800" rows="3"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Reward</label>
+                                    <input id="taskReward" type="number" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 dark:bg-slate-800" placeholder="5000"/>
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Time</label>
+                                    <input id="taskTime" class="form-input w-full rounded-lg border-slate-200 bg-slate-50 dark:bg-slate-800" placeholder="2h"/>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-xs font-bold text-slate-500 uppercase">Complexity</label>
+                                <select id="taskComplexity" class="form-select w-full rounded-lg border-slate-200 bg-slate-50 dark:bg-slate-800">
+                                    <option>Low</option><option>Medium</option><option>High</option>
+                                </select>
+                            </div>
+                            <button id="createTaskBtn" class="mt-2 w-full bg-primary hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center gap-2">
+                                <span class="material-symbols-outlined">add</span> Create Task
+                            </button>
+                        </div>
+
+                        <div id="taskDetails" class="hidden bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <div class="flex justify-between items-start">
+                                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Task Details</h2>
+                                <button id="closeDetails" class="text-slate-400 hover:text-red-500 text-xl">✕</button>
+                            </div>
+                            <p id="td-date" class="text-sm text-slate-500 mt-1"></p>
+                            <div class="mt-6 border-t border-slate-100 dark:border-slate-700 pt-4">
+                                <h3 id="td-title" class="text-xl font-bold text-slate-800 dark:text-white mb-2"></h3>
+                                <p id="td-desc" class="text-sm text-slate-600 dark:text-slate-400"></p>
+                            </div>
+                            <div class="mt-4 space-y-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-lg">
+                                <div class="flex justify-between"><span class="text-sm text-slate-500">Reward</span><span id="td-reward" class="text-sm font-bold text-green-600"></span></div>
+                                <div class="flex justify-between"><span class="text-sm text-slate-500">Time</span><span id="td-time" class="text-sm font-bold"></span></div>
+                                <div class="flex justify-between"><span class="text-sm text-slate-500">Level</span><span id="td-complexity" class="text-sm font-bold"></span></div>
+                            </div>
+                            <div class="flex justify-between items-center mt-6">
+                                <button id="prevTaskBtn" class="px-3 py-1 bg-slate-100 rounded text-sm">←</button>
+                                <span id="taskIndexLabel" class="text-xs text-slate-400"></span>
+                                <button id="nextTaskBtn" class="px-3 py-1 bg-slate-100 rounded text-sm">→</button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 mt-6">
+                                <button id="backToCreateBtn" class="w-full py-2 bg-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-300">New Task</button>
+                                <button id="deleteTaskBtn" class="w-full py-2 bg-red-100 text-red-600 font-bold rounded-lg hover:bg-red-200">Delete</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // --- 1. ДАННЫЕ И СОСТОЯНИЕ ---
+    let currentDate = new Date(2025, 11, 1);
+    let selectedDateISO = null;
+    let selectedTasksList = [];
+    let currentTaskIndex = 0;
+    let TASKS = {};
+
+    // Авторизация (в будущем можно сделать форму, сейчас хардкод для теста)
+    // Поменяй на "worker:password", чтобы проверить режим сотрудника
+    const USER_LOGIN = "boss";
+    const USER_PASS = "password";
+    const AUTH_HEADER = "Basic " + btoa(USER_LOGIN + ":" + USER_PASS);
+
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    // --- 2. API ЗАПРОСЫ (SPRING BOOT) ---
+
+    async function fetchTasks() {
+        try {
+            const response = await fetch('http://localhost:8080/api/tasks', {
+                headers: { 'Authorization': AUTH_HEADER }
+            });
+            if (!response.ok) throw new Error("Auth failed");
+
+            const data = await response.json();
+
+            // Группируем задачи по датам для календаря
+            TASKS = {};
+            data.forEach(task => {
+                const date = task.taskDate;
+                if (!TASKS[date]) TASKS[date] = [];
+                TASKS[date].push(task);
+            });
+
+            renderCalendar();
+            console.log("Tasks loaded from server");
+        } catch (e) {
+            console.error("Server error:", e);
+            alert("Could not connect to Spring Boot server!");
+        }
+    }
+
+    async function saveTaskOnServer(newTask) {
+        try {
+            const response = await fetch('http://localhost:8080/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': AUTH_HEADER
+                },
+                body: JSON.stringify(newTask)
+            });
+            if (response.ok) {
+                alert("Task saved on server!");
+                await fetchTasks();
+            } else {
+                alert("Access denied! Only Employers can create tasks.");
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    async function deleteTaskFromServer(taskId) {
+        try {
+            const response = await fetch(`http://localhost:8080/api/tasks/${taskId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': AUTH_HEADER }
+            });
+            if (response.ok) {
+                alert("Task deleted!");
+                await fetchTasks();
+                showPanel('empty');
+            } else {
+                alert("Error deleting task.");
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // --- 3. ЛОГИКА КАЛЕНДАРЯ ---
+
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const label = document.getElementById('monthLabel');
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        label.textContent = `${MONTHS[month]} ${year}`;
+        grid.innerHTML = '';
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const firstDayIndex = new Date(year, month, 1).getDay();
+        const prevMonthDays = new Date(year, month, 0).getDate();
+        const totalSlots = 35;
+        const startDay = prevMonthDays - firstDayIndex + 1;
+
+        for (let i = 0; i < totalSlots; i++) {
+            const cell = document.createElement('div');
+            cell.className = "h-32 p-2 border-b border-r border-slate-200 dark:border-slate-800 transition-colors relative flex flex-col gap-1 overflow-hidden";
+
+            const dayNumber = startDay + i;
+            let day, isCurrentMonth;
+
+            if (dayNumber <= prevMonthDays) {
+                day = dayNumber; isCurrentMonth = false;
+            } else if (dayNumber > prevMonthDays + daysInMonth) {
+                day = dayNumber - (prevMonthDays + daysInMonth); isCurrentMonth = false;
+            } else {
+                day = dayNumber - prevMonthDays; isCurrentMonth = true;
+            }
+
+            const isoDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+            if (!isCurrentMonth) {
+                cell.className += " bg-slate-50/50 dark:bg-slate-900/50 cursor-default";
+            } else {
+                cell.className += " cursor-pointer hover:bg-blue-50 dark:hover:bg-slate-800";
+                if (selectedDateISO === isoDate) cell.classList.add('day--selected');
+
+                cell.onclick = () => {
+                    selectedDateISO = isoDate;
+                    renderCalendar();
+                    if (TASKS[isoDate] && TASKS[isoDate].length > 0) {
+                        openTaskDetails(0);
+                    } else {
+                        openCreatePanel();
+                    }
+                };
+            }
+
+            const num = document.createElement('span');
+            num.textContent = day;
+            num.className = isCurrentMonth ? "text-sm font-bold text-slate-700" : "text-sm font-medium text-slate-300";
+            cell.appendChild(num);
+
+            if (isCurrentMonth && TASKS[isoDate]) {
+                TASKS[isoDate].slice(0, 3).forEach((task) => {
+                    const badge = document.createElement('div');
+                    let colorClass = task.complexity === 'High' ? 'bg-red-100 text-red-700' :
+                                     task.complexity === 'Medium' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700';
+                    badge.className = `text-[10px] font-bold px-1.5 py-0.5 rounded ${colorClass} truncate shadow-sm`;
+                    badge.textContent = task.title;
+                    cell.appendChild(badge);
+                });
+            }
+            grid.appendChild(cell);
+        }
+        applyRoleSecurity(); // Скрываем кнопки в зависимости от роли
+    }
+
+    // --- 4. УПРАВЛЕНИЕ ПАНЕЛЯМИ ---
+
+    const panels = {
+        empty: document.getElementById('emptyStatePanel'),
+        create: document.getElementById('createTaskPanel'),
+        details: document.getElementById('taskDetails')
+    };
+
+    function showPanel(name) {
+        Object.values(panels).forEach(el => el.classList.add('hidden'));
+        panels[name].classList.remove('hidden');
+    }
+
+    function applyRoleSecurity() {
+        // Если зашел рабочий, он не может видеть кнопки создания и удаления
+        if (USER_LOGIN === "worker") {
+            if (document.getElementById('createTaskBtn')) document.getElementById('createTaskBtn').classList.add('hidden');
+            if (document.getElementById('deleteTaskBtn')) document.getElementById('deleteTaskBtn').classList.add('hidden');
+            if (document.getElementById('backToCreateBtn')) document.getElementById('backToCreateBtn').classList.add('hidden');
+        }
+    }
+
+    function openCreatePanel() {
+        if (USER_LOGIN === "worker") return showPanel('empty');
+        showPanel('create');
+        document.getElementById('createPanelDate').textContent = `Adding task for: ${selectedDateISO}`;
+    }
+
+    function openTaskDetails(index) {
+        if(!TASKS[selectedDateISO]) return;
+        selectedTasksList = TASKS[selectedDateISO];
+        currentTaskIndex = index;
+        const task = selectedTasksList[index];
+
+        document.getElementById('td-date').textContent = selectedDateISO;
+        document.getElementById('td-title').textContent = task.title;
+        document.getElementById('td-desc').textContent = task.description;
+        document.getElementById('td-reward').textContent = task.reward;
+        document.getElementById('td-time').textContent = task.time;
+        document.getElementById('td-complexity').textContent = task.complexity;
+        document.getElementById('taskIndexLabel').textContent = `${index + 1} / ${selectedTasksList.length}`;
+
+        showPanel('details');
+    }
+
+    // --- 5. СОБЫТИЯ ---
+
+    document.getElementById('createTaskBtn').onclick = async () => {
+        const title = document.getElementById('taskTitle').value;
+        if(!title) return alert("Enter a title!");
+
+        const newTask = {
+            title: title,
+            description: document.getElementById('taskDesc').value || "No description",
+            reward: (document.getElementById('taskReward').value || "0") + " ₸",
+            time: document.getElementById('taskTime').value || "N/A",
+            complexity: document.getElementById('taskComplexity').value,
+            taskDate: selectedDateISO,
+            status: "OPEN"
+        };
+
+        await saveTaskOnServer(newTask);
+    };
+
+    document.getElementById('deleteTaskBtn').onclick = async () => {
+        const currentTask = selectedTasksList[currentTaskIndex];
+        if(!currentTask.id) return alert("Cannot delete task without ID");
+        if(confirm("Delete this task from server?")) {
+            await deleteTaskFromServer(currentTask.id);
+        }
+    };
+
+    document.getElementById('prevMonthBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); };
+    document.getElementById('nextMonthBtn').onclick = () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); };
+    document.getElementById('prevTaskBtn').onclick = () => { if(currentTaskIndex > 0) openTaskDetails(currentTaskIndex - 1); };
+    document.getElementById('nextTaskBtn').onclick = () => { if(currentTaskIndex < selectedTasksList.length - 1) openTaskDetails(currentTaskIndex + 1); };
+    document.getElementById('closeDetails').onclick = () => showPanel('empty');
+    document.getElementById('backToCreateBtn').onclick = () => openCreatePanel();
+
+    // --- 6. ЗАПУСК ---
+    document.addEventListener('DOMContentLoaded', fetchTasks);
+</script>
+</body>
+</html>
